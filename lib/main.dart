@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
 class Mascota {
   String nombre;
   String raza;
-  double peso;
+  String peso;
 
   Mascota({required this.nombre, required this.raza, required this.peso});
 }
@@ -68,13 +68,19 @@ class _LoginFormState extends State<LoginForm> {
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = json.decode(response.body);
+      String idUsuario = data['id'];
       usuarioAPI = data['nombre'];
+      final responseMascota = await http.get(Uri.parse(
+          'https://vetemovil.000webhostapp.com/mascotas/consultarMascota/$idUsuario'));
+      Map<String, dynamic> dataMascota = json.decode(responseMascota.body);
       String contrasenaHashAPI = data['contrasena'];
       if (usuario == usuarioAPI &&
           BCrypt.checkpw(contrasena, contrasenaHashAPI)) {
         Usuario usuario = Usuario(nombreUsuario: usuarioAPI);
-        Mascota mascota =
-            Mascota(nombre: 'NombreDeMascota', raza: 'RazaEjemplo', peso: 10.5);
+        Mascota mascota = Mascota(
+            nombre: dataMascota['nombre'],
+            raza: dataMascota['raza'],
+            peso: dataMascota['peso']);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -227,7 +233,7 @@ class _LoginFormState extends State<LoginForm> {
       String nombreUsuario = nombreUsuarioNulo ?? '';
       Usuario usuario = Usuario(nombreUsuario: nombreUsuario);
       Mascota mascota =
-          Mascota(nombre: 'NombreDeMascota', raza: 'RazaEjemplo', peso: 10.5);
+          Mascota(nombre: 'NombreDeMascota', raza: 'RazaEjemplo', peso: "10.5");
 
       Navigator.pushReplacement(
         context,
