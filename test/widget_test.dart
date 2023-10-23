@@ -9,22 +9,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:my_app/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp());
+  testWidgets('Cerrar Sesión elimina el nombre de usuario y navega a LoginForm',
+      (WidgetTester tester) async {
+    // Crea una instancia de SharedPreferences y guarda un nombre de usuario
+    var prefs = await SharedPreferences.getInstance();
+    await prefs.setString('nombreDeUsuario', 'usuarioPrueba');
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Crea una instancia de Key para LoginForm para poder encontrar el widget
+    var loginFormKey = Key('loginFormKey');
+    // Construye la pantalla de InfoMascotaUsuarioScreen
+    await tester.pumpWidget(MaterialApp(
+      home: InfoMascotaUsuarioScreen(
+        usuario: Usuario(nombreUsuario: 'usuarioPrueba'),
+        mascota:
+            Mascota(nombre: 'NombreDeMascota', raza: 'RazaEjemplo', peso: 10.5),
+      ),
+    ));
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Verifica que el nombre de usuario esté presente en la pantalla
+    expect(find.text('Usuario: usuarioPrueba'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Act: Toca el botón para cerrar sesión
+    await tester.tap(find.byIcon(Icons.logout));
+    await tester.pumpAndSettle();
+
+    // Espera a que se completen las animaciones y las tareas asincrónicas
+    await tester.pumpAndSettle();
+
+    // Verifica que el nombre de usuario se haya eliminado de las preferencias compartidas
+    expect(prefs.getString('nombreDeUsuario'), isNull);
+
+    // Verifica que se haya navegado a LoginForm
+    expect(find.byKey(loginFormKey), findsOneWidget);
   });
 }

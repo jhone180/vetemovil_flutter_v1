@@ -3,18 +3,18 @@ import 'package:http/http.dart' as http; // Importa el paquete http
 import 'dart:convert';
 import 'package:bcrypt/bcrypt.dart'; // Importa el paquete bcrypt
 import 'package:crypto/crypto.dart'; // Importa el paquete crypto
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: Colors.orange,
-        appBar: AppBar(
-          title: Text('Inicio de Sesión'),
-        ),
+        backgroundColor: Colors.orangeAccent,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -26,6 +26,20 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class Mascota {
+  String nombre;
+  String raza;
+  double peso;
+
+  Mascota({required this.nombre, required this.raza, required this.peso});
+}
+
+class Usuario {
+  String nombreUsuario;
+
+  Usuario({required this.nombreUsuario});
+}
+
 class LoginForm extends StatefulWidget {
   @override
   _LoginFormState createState() => _LoginFormState();
@@ -35,6 +49,7 @@ class _LoginFormState extends State<LoginForm> {
   TextEditingController _usuarioController = TextEditingController();
   TextEditingController _contrasenaController = TextEditingController();
   bool _isLoading = false;
+  String usuarioAPI = "";
 
   Future<bool> _iniciarSesion() async {
     setState(() {
@@ -53,10 +68,22 @@ class _LoginFormState extends State<LoginForm> {
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = json.decode(response.body);
-      String usuarioAPI = data['nombre'];
+      usuarioAPI = data['nombre'];
       String contrasenaHashAPI = data['contrasena'];
       if (usuario == usuarioAPI &&
           BCrypt.checkpw(contrasena, contrasenaHashAPI)) {
+        Usuario usuario = Usuario(nombreUsuario: usuarioAPI);
+        Mascota mascota =
+            Mascota(nombre: 'NombreDeMascota', raza: 'RazaEjemplo', peso: 10.5);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                InfoMascotaUsuarioScreen(usuario: usuario, mascota: mascota),
+          ),
+        );
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('nombreDeUsuario', usuarioAPI);
         return true;
       } else {
         _mostrarMensajeError(context);
@@ -73,70 +100,95 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(
-          'Inicio Sesión',
-          style: TextStyle(
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        SizedBox(height: 20),
-        TextField(
-          controller: _usuarioController,
-          decoration: InputDecoration(
-            hintText: 'Nombre de usuario',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
+    return MaterialApp(
+      // Material y MaterialApp deben envolver tus widgets
+      home: Scaffold(
+        backgroundColor: Colors.orangeAccent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Center(
+            // Centra el título
+            child: Text(
+              'Vetemovil',
+              style: TextStyle(
+                color: Colors.black, // Color del texto del título
+              ),
             ),
           ),
         ),
-        SizedBox(height: 20),
-        TextField(
-          controller: _contrasenaController,
-          obscureText: true,
-          decoration: InputDecoration(
-            hintText: 'Contraseña',
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'Inicio Sesión',
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _usuarioController,
+                  decoration: InputDecoration(
+                    hintText: 'Nombre de usuario',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _contrasenaController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Contraseña',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Llama a la función para iniciar sesión cuando se presiona el botón
+                    _iniciarSesion();
+                  },
+                  child: Text('Ingresar'),
+                ),
+                SizedBox(height: 10),
+                _isLoading ? CircularProgressIndicator() : Container(),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    // Navegar a la pantalla de registro cuando se toca el texto "Registrar Usuario"
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => RegistroUsuarioScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Registrar Usuario',
+                    style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            // Llama a la función para iniciar sesión cuando se presiona el botón
-            _iniciarSesion();
-          },
-          child: Text('Ingresar'),
-        ),
-        SizedBox(height: 10),
-        _isLoading ? CircularProgressIndicator() : Container(),
-        SizedBox(height: 10),
-        GestureDetector(
-          onTap: () {
-            // Navegar a la pantalla de registro cuando se toca el texto "Registrar Usuario"
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => RegistroUsuarioScreen()),
-            );
-          },
-          child: Text(
-            'Registrar Usuario',
-            style: TextStyle(
-              decoration: TextDecoration.underline,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -159,6 +211,44 @@ class _LoginFormState extends State<LoginForm> {
         );
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarSesion();
+  }
+
+  Future<void> _verificarSesion() async {
+    bool sesionIniciada = await _obtenerSesionIniciada();
+
+    if (sesionIniciada) {
+      String? nombreUsuarioNulo = await _obtenerUsuarioSesionIniciada();
+      String nombreUsuario = nombreUsuarioNulo ?? '';
+      Usuario usuario = Usuario(nombreUsuario: nombreUsuario);
+      Mascota mascota =
+          Mascota(nombre: 'NombreDeMascota', raza: 'RazaEjemplo', peso: 10.5);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              InfoMascotaUsuarioScreen(usuario: usuario, mascota: mascota),
+        ),
+      );
+    }
+  }
+
+  Future<bool> _obtenerSesionIniciada() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? nombreDeUsuario = prefs.getString('nombreDeUsuario');
+    return nombreDeUsuario != null;
+  }
+
+  Future<String?> _obtenerUsuarioSesionIniciada() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? nombreDeUsuario = prefs.getString('nombreDeUsuario');
+    return nombreDeUsuario;
   }
 }
 
@@ -251,9 +341,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
   @override
   Widget _buildFormularioRegistro(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Registro de Usuario'),
-      ),
+      backgroundColor: Colors.orangeAccent,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -263,6 +351,8 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                 controller: _usuarioController,
                 decoration: InputDecoration(
                   labelText: 'Nombre de usuario',
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
@@ -274,6 +364,8 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
@@ -296,6 +388,86 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class InfoMascotaUsuarioScreen extends StatelessWidget {
+  final Usuario usuario;
+  final Mascota mascota;
+
+  InfoMascotaUsuarioScreen({required this.usuario, required this.mascota});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Información de Mascota y Usuario',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.orange,
+      ),
+      body: Stack(
+        children: <Widget>[
+          // Fondo con huellas de mascotas
+          // Positioned.fill(
+          //   child: Image(image: AssetImage("assets/negro.jpg")),
+          // ),
+          // Contenido de la pantalla
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                // Información de la mascota centrada
+                Text('Información de Mascota:',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange)),
+                Text('Nombre: ${mascota.nombre}',
+                    style: TextStyle(fontSize: 18, color: Colors.orange)),
+                Text('Raza: ${mascota.raza}',
+                    style: TextStyle(fontSize: 18, color: Colors.orange)),
+                Text('Peso: ${mascota.peso} kg',
+                    style: TextStyle(fontSize: 18, color: Colors.orange)),
+              ],
+            ),
+          ),
+          // Nombre del usuario en la parte inferior
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Usuario: ${usuario.nombreUsuario}',
+                  style: TextStyle(fontSize: 18, color: Colors.orange)),
+            ),
+          ),
+          // Botón para cerrar sesión en la esquina inferior izquierda
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: FloatingActionButton(
+                onPressed: () {
+                  _cerrarSesion(context);
+                },
+                tooltip: 'Cerrar Sesión',
+                backgroundColor: Colors.orange,
+                child: Icon(Icons.logout),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _cerrarSesion(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove(
+        'nombreDeUsuario'); // Elimina el nombre de usuario de SharedPreferences
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginForm()),
     );
   }
 }
