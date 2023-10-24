@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Importa el paquete http
+import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:bcrypt/bcrypt.dart'; // Importa el paquete bcrypt
-import 'package:crypto/crypto.dart'; // Importa el paquete crypto
+import 'package:bcrypt/bcrypt.dart';
+import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(const MyApp());
@@ -58,7 +58,6 @@ class _LoginFormState extends State<LoginForm> {
     String usuario = _usuarioController.text;
     String contrasena = _contrasenaController.text;
 
-    // Realiza la solicitud GET a la API para validar el inicio de sesión
     final response = await http.get(Uri.parse(
         'https://vetemovil.000webhostapp.com/usuario/consultarUsuario/$usuario'));
 
@@ -93,13 +92,13 @@ class _LoginFormState extends State<LoginForm> {
         return true;
       } else {
         _mostrarMensajeError(context);
-        // Las credenciales son incorrectas
+
         return false;
       }
       print(data['nombre']);
     } else {
       _mostrarMensajeError(context);
-      // Si la solicitud no es exitosa, puedes manejar el error según sea necesario
+
       return false;
     }
   }
@@ -107,18 +106,16 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Material y MaterialApp deben envolver tus widgets
       home: Scaffold(
         backgroundColor: Colors.orangeAccent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           title: Center(
-            // Centra el título
             child: Text(
               'Vetemovil',
               style: TextStyle(
-                color: Colors.black, // Color del texto del título
+                color: Colors.black,
               ),
             ),
           ),
@@ -165,7 +162,6 @@ class _LoginFormState extends State<LoginForm> {
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Llama a la función para iniciar sesión cuando se presiona el botón
                     _iniciarSesion();
                   },
                   child: Text('Ingresar'),
@@ -175,7 +171,6 @@ class _LoginFormState extends State<LoginForm> {
                 SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-                    // Navegar a la pantalla de registro cuando se toca el texto "Registrar Usuario"
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -210,7 +205,7 @@ class _LoginFormState extends State<LoginForm> {
             TextButton(
               child: Text('OK'),
               onPressed: () {
-                Navigator.of(context).pop(); // Cierra el AlertDialog
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -308,7 +303,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
     String usuario = _usuarioController.text;
     String contrasena = _contrasenaController.text;
     String hash = BCrypt.hashpw(contrasena, BCrypt.gensalt());
-    // Prepara los datos del usuario para enviar a la API
+
     Map<String, String> datosUsuario = {
       'nombre': usuario,
       'contrasena': hash,
@@ -319,8 +314,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
     final response = await http.post(
       Uri.parse('https://vetemovil.000webhostapp.com/usuario/registrar'),
       headers: {
-        'Content-Type':
-            'application/json', // Indica que el cuerpo de la solicitud es JSON
+        'Content-Type': 'application/json',
       },
       body: jsonData,
     );
@@ -336,8 +330,6 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
         content: Text('Registro exitoso'),
       ));
     } else {
-      // Fallo en el registro, puedes manejar la respuesta según lo necesario
-      // Por ejemplo, mostrar un mensaje de error al usuario
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error en el registro. Por favor, inténtalo de nuevo.'),
       ));
@@ -380,13 +372,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  // Acción cuando se presiona el botón de registro
-                  // Puedes obtener los datos ingresados por el usuario así:
-
                   _registrarUsuario(context);
-
-                  // Aquí puedes manejar la lógica de registro del usuario
-                  // Por ejemplo, enviar los datos a un servidor, guardar en una base de datos, etc.
                 },
                 child: Text('Registrar'),
               ),
@@ -414,16 +400,13 @@ class InfoMascotaUsuarioScreen extends StatelessWidget {
       ),
       body: Stack(
         children: <Widget>[
-          // Fondo con huellas de mascotas
           // Positioned.fill(
           //   child: Image(image: AssetImage("assets/negro.jpg")),
           // ),
-          // Contenido de la pantalla
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                // Información de la mascota centrada
                 Text('Información de Mascota:',
                     style: TextStyle(
                         fontSize: 18,
@@ -438,7 +421,7 @@ class InfoMascotaUsuarioScreen extends StatelessWidget {
               ],
             ),
           ),
-          // Nombre del usuario en la parte inferior
+
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -447,7 +430,7 @@ class InfoMascotaUsuarioScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 18, color: Colors.orange)),
             ),
           ),
-          // Botón para cerrar sesión en la esquina inferior izquierda
+
           Align(
             alignment: Alignment.bottomLeft,
             child: Padding(
@@ -469,11 +452,15 @@ class InfoMascotaUsuarioScreen extends StatelessWidget {
 
   void _cerrarSesion(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.remove(
-        'nombreDeUsuario'); // Elimina el nombre de usuario de SharedPreferences
+    prefs.remove('nombreDeUsuario');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginForm()),
     );
+  }
+
+  Future<void> cerrarSesionPrueba() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('nombreDeUsuario');
   }
 }
